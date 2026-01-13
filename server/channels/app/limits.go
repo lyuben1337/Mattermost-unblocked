@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	maxUsersLimit     = 200
-	maxUsersHardLimit = 250
+	maxUsersLimit            = 200
+	maxUsersHardLimit        = 250
+	postHistoryLimitOverride = 99999999
 )
 
 func (a *App) GetServerLimits() (*model.ServerLimits, *model.AppError) {
@@ -36,9 +37,10 @@ func (a *App) GetServerLimits() (*model.ServerLimits, *model.AppError) {
 		limits.MaxUsersHardLimit = licenseUserLimit + int64(extraUsers)
 	}
 
+	postHistoryLimit := a.GetPostHistoryLimit()
 	// Check if license has post history limits and get the calculated timestamp
-	if license != nil && license.Limits != nil && license.Limits.PostHistory > 0 {
-		limits.PostHistoryLimit = license.Limits.PostHistory
+	if postHistoryLimit > 0 {
+		limits.PostHistoryLimit = postHistoryLimit
 		// Get the calculated timestamp of the last accessible post
 		lastAccessibleTime, appErr := a.GetLastAccessiblePostTime()
 		if appErr != nil {
@@ -62,7 +64,7 @@ func (a *App) GetPostHistoryLimit() int64 {
 		return 0
 	}
 
-	return license.Limits.PostHistory
+	return postHistoryLimitOverride
 }
 
 func (a *App) isAtUserLimit() (bool, *model.AppError) {
